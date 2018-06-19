@@ -1,12 +1,12 @@
 ---
 id: install-and-configure-wordpress
-summary: Install and configure WordPress blog tool and CMS on Apache server and create your first post.
+summary: Install and configure WordPress, an online publishing platform, and create your first post.
 categories: server
 tags: ubuntu-server, apache, wordpress, blogging, cms
 difficulty: 3
 status: published
 feedback_url: https://github.com/canonical-websites/tutorials.ubuntu.com/issues
-published: 2017-12-14
+published: 2018-06-19
 author: Marcin Mikołajczak <me@m4sk.in>
 
 ---
@@ -16,40 +16,48 @@ author: Marcin Mikołajczak <me@m4sk.in>
 ## Overview
 Duration: 1:00
 
-WordPress is the most popular open source blogging system and CMS on the Web. It is based on PHP and MySQL. Its features can be extended with thousands of free plugins and themes. 
+WordPress is open source software that you can use to create a beautiful website, blog, or app. It is the most popular online publishing platform, currently powering more than 28% of the web. 
 
-In this tutorial we will install WordPress on Apache2 server and create our first post.
+It is based on PHP and MySQL, and runs on the Apache2 web server. Its features can be extended with thousands of free plugins and themes. 
+
+In this tutorial we will install WordPress and create our first blog post.
 
 ### What you’ll learn
 
   - How to set up WordPress
   - How to configure WordPress
-  - How to create first post
+  - How to create your first post
 
 ### What you’ll need
 
-  - A computer running Ubuntu Server 16.04 LTS
-  - Running Apache2 server
-  - You don’t need to know how to configure database.
+  - Ubuntu 18.04 LTS (Server or Desktop)
 
+Your server's ready? Let's get started...
 
 ## Install WordPress
 Duration: 1:00
 
-To install WordPress, use following command:
+Run these commands to install WordPress and its dependencies Apache2, PHP and MySQL:
 
 ```bash
 sudo apt update
-sudo apt install wordpress php libapache2-mod-php mysql-server php-mysql
+sudo apt install php apache2 mysql-server libapache2-mod-php php-mysql wordpress
 ```
 
-If you haven’t installed MySQL before, you will be asked for password for “root” MySQL user. You can leave this field empty.
+Confirm that the installed services are running (look for `active (running)` status):
+```bash
+sudo systemctl status mysql
+sudo systemctl status apache2
+```
 
 ## Configure Apache for WordPress
 Duration: 2:00
 
-Create Apache site for WordPress. Create `/etc/apache2/sites-available/wordpress.conf` with following lines:
-
+Use a text editor (with `sudo` for write access) to create a new Apache site configuration file for your WordPress site:
+```sh
+sudo nano /etc/apache2/sites-available/wordpress.conf
+```
+Enter the following site configuation then save and exit from your editor:
 ```
 Alias /blog /usr/share/wordpress
 <Directory /usr/share/wordpress>
@@ -65,46 +73,61 @@ Alias /blog /usr/share/wordpress
     Allow from all
 </Directory>
 ```
+Enable the site:
+```sh
+sudo a2ensite wordpress
+sudo systemctl reload apache2
+```
 
-Enable this site with `sudo a2ensite wordpress` and reload apache2 with `sudo service apache2 reload`.
-
-## Configure database
+## Create a database
 Duration: 4:00
 
-To configure WordPress, we need to create MySQL database. Let’s do it!
+WordPress needs a MySQL database. Start the MySQL shell so that we can set one up:
 
-```bash
-$ sudo mysql -u root
+```sh
+sudo mysql -u root
+```
+A welcome message will greet you and present a command prompt:
+```
 Welcome to the MySQL monitor.  Commands end with ; or \g.
 Your MySQL connection id is 7
-Server version: 5.7.20-0ubuntu0.16.04.1 (Ubuntu)
+Server version: 5.7.22-0ubuntu0.18.04.1 (Ubuntu)
 
-Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+mysql>
+```
 
-Oracle is a registered trademark of Oracle Corporation and/or its
-affiliates. Other names may be trademarks of their respective
-owners.
-
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-mysql> CREATE DATABASE wordpress;
+First create the database (_notice how MySQL commands end with a semicolon!_):
+```
+CREATE DATABASE wordpress;
+```
+MySQL will respond like this:
+```
 Query OK, 1 row affected (0,00 sec)
+```
+Next, grant access rights to the database:
+```
+GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER
+ON wordpress.*
+TO wordpress@localhost
+IDENTIFIED BY '<your-password>';
+FLUSH PRIVILEGES;
+```
 
-mysql> GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER
-    -> ON wordpress.*
-    -> TO wordpress@localhost
-    -> IDENTIFIED BY '<your-password>';
-Query OK, 1 row affected (0,00 sec)
-
-mysql> FLUSH PRIVILEGES;
-Query OK, 1 row affected (0,00 sec)
-
-mysql> quit
+That's it. Enter `quit` to leave the MySQL shell. It'll exit, responding with:
+```
 Bye
 ```
 
-Now, let’s configure WordPress to use this database. Open `/etc/wordpress/config-localhost.php` and write:
+In the next step, we'll introduce WordPress to its database...
 
+## Configure Wordpress
+Duration: 2:00
+
+Before we can configure Wordpress we must tell it about its database. Use a text editor (with `sudo`) to create a new configuration file for the database connection parameters:
+```sh
+sudo nano /etc/wordpress/config-localhost.php
+```
+Write the following into the file, then save it and exit from your editor:
 ```
 <?php
 define('DB_NAME', 'wordpress');
@@ -115,48 +138,47 @@ define('WP_CONTENT_DIR', '/usr/share/wordpress/wp-content');
 ?>
 ```
 
-Enable MySQL with `sudo service mysql start`.
-
-
-## Configure WordPress
-Duration: 2:00
-
-Open `localhost/blog` in your browser. You will be asked for title of your new site, username, password and address e-mail. You can choose if you want to make your site indexed by search engines.
+Now point your browser to `http://localhost/blog` to view the setup page where you should enter a title for your new site, your e-mail address (which is used for password resets), and choose a user name and password (a random password is provided for you but you are free to change it).
 
 ![WordPress installation](images/install.png)
 
-You can now login under `localhost/blog/wp-login.php`. In Dashboard, you will see bunch of icons and options. Don’t worry, it’s easy!
+A final option allows you to decide if your site should be indexed by search engines. 
+
+Press the **Install WordPress** button at the bottom of the page when you have completed the form. You should see a page informing you that WordPress has been successfully installed.
+
+You can now press the **Log In** button (or browse to `http://localhost/blog/wp-login.php`) to log into our new WordPress *Dashboard* where we can start writing our first post.
+
+## Write your first post
+
+The Dashboard is your home within WordPress. A panel welcomes you to WordPress and offers links to help you get started. 
 
 ![Dashboard](images/dashboard.png)
 
+Start with the link inviting you to **Write your first blog post**. It brings up the **Add New Post** screen.
 
-## Write your first post
-Duration: 3:00
-
-You have probably noticed that “Hello world!” post. We will delete it and write something more interesting…
-
-![All Posts](images/all-posts.png)
-
-From Dashboard (`localhost/blog/wp-admin/`), select “Posts” icon and click on “All Posts”. Mouse over the “Hello world!” post title and select **Trash**.
-
-![Move to Trash](images/move-to-trash.png)
-
-To create new post, click on the “Add New” button. You should notice a fancy WYSIWYG editor with simple (but powerful) text formatting options. You may want to switch to Text mode, if you prefer pure HTML.
-
-Let’s write something! It’s as easy, as using text processors that you know from office suites.
+positive
+: You can also start a new post using the **new** button on the top bar or by selecting **Posts > Add New** from the side bar.
 
 ![First post](images/new-post.png)
 
-Now, click the Publish button. You can now view your brand new post!
+Enter title in the space provided and then write your content in the editing area below.
 
-## That’s all!
+The editing area has two modes selectable by tabs along the top: **Visual** is the default and has simple (but powerful) text formatting options, whereas the **Text** mode allows you to write using HTML.
+
+Go ahead... Write your post and, when it's ready,  publish it: the **Publish** button is over there on the right-hand side of the screen.
+
+You can now view your brand new post - WordPress gives you a *Permalink* to it. It's right there, just beneath the title!
+
+## You've done it!
 Duration: 1:00
 
-Of course, this tutorial has only described basics of WordPress usage, you can do much more with this blogging platform/CMS. You can install one of thousands of available (free and commercial) plugins and themes. You can even configure it as forum (with [bbPress] plugin), microblogging platform ([BuddyPress]), eCommerce platform ([WooCommerce]) or extend existing WordPress features with plugins like [JetPack] or [TinyMCE Advanced][tinymce-advanced].
+Congratulations! You have installed WordPress and started posting content.
 
-WordPress manual and documentation is available in the [WordPress Codex][wordpress-codex].You can read it to learn more about WordPress usage, and even something about themes/plugins development.
+Of course, this tutorial is only a basic introduction to WordPress. You can do much more with it, perhaps install one of thousands of available (free and commercial) plugins and themes. Or use it as forum (with [bbPress] plugin), microblogging platform ([BuddyPress]), eCommerce platform ([WooCommerce]) or extend existing WordPress features with plugins like [JetPack] or [TinyMCE Advanced][tinymce-advanced].
 
-If you need more guidance on using WordPress, help is always at hand:
+Read the WordPress documentation, available in the [WordPress Codex][wordpress-codex], to discover more about WordPress usage or even theme/plugin development.
+
+Help is always at hand should you need more guidance on using WordPress:
 
 * [Ask Ubuntu][askubuntu]
 * [Ubuntu Forums][forums]
